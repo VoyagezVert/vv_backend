@@ -40,30 +40,42 @@ jobs:
       - name: Compute new version
         id: bump
         run: |
-          CURRENT="${CURRENT_VERSION#v}"
-          BASE_VERSION="${CURRENT%-SNAPSHOT}"
-          IFS='.' read -ra PARTS <<< "$BASE_VERSION"
-          MAJOR=${PARTS[0]:-0}
-          MINOR=${PARTS[1]:-0}
-          PATCH=${PARTS[2]:-0}
+          set -x
+          echo "DEBUG: CURRENT_VERSION=${CURRENT_VERSION}"
+          VERSION_WITHOUT_V="${CURRENT_VERSION#v}"
+          echo "DEBUG: VERSION_WITHOUT_V=${VERSION_WITHOUT_V}"
+          BASE="${VERSION_WITHOUT_V%-SNAPSHOT}"
+          echo "DEBUG: BASE=${BASE}"
+          
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+          
+          echo "DEBUG: MAJOR=$MAJOR MINOR=$MINOR PATCH=$PATCH"
+          
           BRANCH="${GITHUB_REF##*/}"
+          echo "DEBUG: BRANCH=${BRANCH}"
+          
           SUFFIX=""
+          
           if [[ "$BRANCH" == "prod" ]]; then
-            ((MAJOR++))
+            MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
             SUFFIX=""
           elif [[ "$BRANCH" == "staging" ]]; then
-            ((MINOR++))
+            MINOR=$((MINOR + 1))
             PATCH=0
             SUFFIX="-SNAPSHOT"
-          elif [[ "$BRANCH" == "fix/"* || "$BRANCH" == "bugfix/"* ]]; then
-            ((PATCH++))
+          elif [[ "$BRANCH" == fix/* ]] || [[ "$BRANCH" == bugfix/* ]]; then
+            PATCH=$((PATCH + 1))
             SUFFIX="-SNAPSHOT"
           else
-            ((PATCH++))
+            PATCH=$((PATCH + 1))
             SUFFIX="-SNAPSHOT"
           fi
+          
           NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           echo "Nouvelle version : $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
