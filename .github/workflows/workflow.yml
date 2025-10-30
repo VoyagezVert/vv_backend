@@ -1,0 +1,68 @@
+name: Build and Deploy VoyagezVert Backend
+
+on:
+  push:
+    branches: [ "**" ] # build sur toutes les branches
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout du code (avec historique pour pouvoir tagger)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2️⃣ Configuration du JDK
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+
+      # 3️⃣ Lecture de la version du projet
+      - name: Read project version
+        id: version
+        run: |
+          VERSION=$(cat .version | tr -d '[:space:]')
+          echo "PROJECT_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version détectée : $VERSION"
+
+      # 4️⃣ Build du projet Gradle
+      - name: Build with Gradle
+        run: ./gradlew clean build
+        env:
+          PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
+
+      # 5️⃣ Gestion des tags automatiques
+      - name: Tag staging build
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          VERSION="${PROJECT_VERSION%-SNAPSHOT}" # retire -SNAPSHOT s’il existe
+          TAG="v${VERSION}-SNAPSHOT"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag -a "$TAG" -m "Staging build $TAG"
+          git push origin "$TAG"
+          echo "🏷️ Tag staging créé : $TAG"
+
+      # 6️⃣ Tag production (master) sans -SNAPSHOT
+      - name: Tag production release
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VERSION="${PROJECT_VERSION%-SNAPSHOT}"
+          TAG="v${VERSION}"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag -a "$TAG" -m "Production release $TAG"
+          git push origin "$TAG"
+          echo "🚀 Tag production créé : $TAG"
+
+      # 7️⃣ Placeholder de déploiement
+      - name: Deploy (placeholder)
+        run: echo "🚀 Déploiement de la version $PROJECT_VERSION (placeholder)"
