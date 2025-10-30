@@ -46,13 +46,13 @@ jobs:
         run: |
           set -e
           CURRENT="${CURRENT_VERSION#v}"                 # retire le 'v'
-          BASE_VERSION="${CURRENT%-SNAPSHOT}"           # retire le suffixe -SNAPSHOT si présent
+          BASE_VERSION="${CURRENT%-SNAPSHOT}"           # retire -SNAPSHOT si présent
 
-          # Séparer MAJOR.MINOR.PATCH et gérer les champs manquants
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
-          MAJOR=${MAJOR:-0}
-          MINOR=${MINOR:-0}
-          PATCH=${PATCH:-0}
+          # Split manuel sécurisé avec fallback
+          IFS='.' read -ra PARTS <<< "$BASE_VERSION"
+          MAJOR=${PARTS[0]:-0}
+          MINOR=${PARTS[1]:-0}
+          PATCH=${PARTS[2]:-0}
 
           BRANCH="${GITHUB_REF##*/}"
           SUFFIX=""
