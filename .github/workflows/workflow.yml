@@ -58,7 +58,7 @@ jobs:
 
       # 6️⃣ Tag production (master) sans -SNAPSHOT
       - name: Tag production release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/prod'
         run: |
           VERSION="${PROJECT_VERSION%-SNAPSHOT}"
           TAG="v${VERSION}"
