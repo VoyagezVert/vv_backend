@@ -44,10 +44,9 @@ jobs:
       - name: Compute new version
         id: bump
         run: |
-          CURRENT="${CURRENT_VERSION#v}"                 # retire le 'v'
-          BASE_VERSION="${CURRENT%-SNAPSHOT}"           # retire -SNAPSHOT si présent
+          CURRENT="${CURRENT_VERSION#v}"
+          BASE_VERSION="${CURRENT%-SNAPSHOT}"
           
-          # Split manuel sécurisé avec tableau et fallback
           IFS='.' read -ra PARTS <<< "$BASE_VERSION"
           MAJOR=${PARTS[0]:-0}
           MINOR=${PARTS[1]:-0}
@@ -56,7 +55,6 @@ jobs:
           BRANCH="${GITHUB_REF##*/}"
           SUFFIX=""
           
-          # Incrémentation selon la branche
           if [[ "$BRANCH" == "prod" ]]; then
             ((MAJOR++))
             MINOR=0
