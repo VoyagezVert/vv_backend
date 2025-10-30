@@ -35,7 +35,7 @@ jobs:
 
       # 4️⃣ Build du projet Gradle
       - name: Build with Gradle
-        run: ./gradle clean build
+        run: gradle clean build
         env:
           PROJECT_VERSION: ${{ env.PROJECT_VERSION }}
 
