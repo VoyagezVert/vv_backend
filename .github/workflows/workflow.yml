@@ -56,7 +56,7 @@ jobs:
           git push origin "$TAG"
           echo "🏷️ Tag staging créé : $TAG"
 
-      # 6️⃣ Tag production (master) sans -SNAPSHOT
+      # 6️⃣ Tag production (prod) sans -SNAPSHOT
       - name: Tag production release
         if: github.ref == 'refs/heads/prod'
         run: |
