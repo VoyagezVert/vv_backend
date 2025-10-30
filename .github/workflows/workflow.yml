@@ -44,10 +44,12 @@ jobs:
       - name: Compute new version
         id: bump
         run: |
-          CURRENT="${CURRENT_VERSION#v}" # retire le v
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          CURRENT="${CURRENT_VERSION#v}"                 # retire le 'v'
+          BASE_VERSION="${CURRENT%-SNAPSHOT}"           # retire le suffixe -SNAPSHOT si présent
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
 
           BRANCH="${GITHUB_REF##*/}"
+          SUFFIX=""
 
           if [[ "$BRANCH" == "prod" ]]; then
             ((MAJOR++))
