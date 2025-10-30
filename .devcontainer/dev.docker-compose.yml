@@ -1,0 +1,36 @@
+services:
+  vv_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vv_backend
+    working_dir: /workspace
+    env_file:
+      - .env.local
+    volumes:
+      - ..:/workspace
+      - /workspace/.gradle
+      - /workspace/build
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://voyagezvert:voyagezvert@vv_db:5432/vv_db
+    command: sh -c "sleep infinity"
+    depends_on:
+      - vv_db
+
+  vv_db:
+    image: postgres:16.10-alpine3.22
+    container_name: vv_db
+    restart: always
+    environment:
+      POSTGRES_USER: voyagezvert
+      POSTGRES_PASSWORD: voyagezvert
+      POSTGRES_DB: vv_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - vv_db:/var/lib/postgresql/data
+
+volumes:
+  vv_db:

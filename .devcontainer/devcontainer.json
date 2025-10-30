@@ -1,0 +1,14 @@
+{
+  "name": "VoyagezVert Backend Dev Container",
+  "dockerComposeFile": [
+    "dev.docker-compose.yml"
+  ],
+  "service": "vv_backend",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "root",
+  "forwardPorts": [8080],
+  "postCreateCommand": [
+    "git config --global user.name \"$GIT_USER\" && git config --global user.email \"$GIT_EMAIL\" && gradle build"
+  ]
+}
