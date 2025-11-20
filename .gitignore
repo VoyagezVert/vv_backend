@@ -2,3 +2,4 @@ build
 .idea
 .devcontainer/.env.local
 .gradle
+.env.prod
