@@ -7,7 +7,8 @@ Ce dépôt contient le backend Springboot pour le projet **VoyagezVert**.
 ## 🚀 Prérequis
 
 - Docker + Docker Compose (en WSL si possible)
-- Git Flow : feature → staging → main
+- Git Flow : feature → staging → prod
+- Git Conventional Commits : [https://www.conventionalcommits.org/en/v1.0.0/]
 
 ---
 
