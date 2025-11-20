@@ -1,0 +1,1007 @@
+openapi: 3.0.3
+info:
+  title: VoyagezVert API
+  description: |
+    API pour l'application VoyagezVert - Aide à la planification de voyages écoresponsables
+    
+    Cette API permet de :
+    - Rechercher des destinations écologiques
+    - Calculer l'empreinte carbone des trajets
+    - Filtrer les hébergements écoresponsables
+    - Gérer les itinéraires et favoris des utilisateurs
+    
+    ## Authentification
+    L'API utilise JWT Bearer tokens pour l'authentification des utilisateurs connectés.
+    
+    ## Limitation des requêtes
+    - Utilisateurs non-authentifiés : 100 requêtes/heure
+    - Utilisateurs authentifiés : 1000 requêtes/heure
+    
+  version: 1.0.0
+  contact:
+    name: Équipe VoyagezVert
+    email: contact@voyagezverte.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.voyagezverte.com/v1
+    description: Serveur de production
+  - url: https://api-staging.voyagezverte.com/v1
+    description: Serveur de test
+  - url: http://localhost:8080/api/v1
+    description: Serveur de développement local
+
+security:
+  - {}
+  - bearerAuth: []
+
+paths:
+  # Recherche de destinations
+  /destinations/search:
+    get:
+      summary: Rechercher des destinations écologiques
+      description: Recherche de destinations basée sur des critères géographiques et écologiques
+      tags:
+        - Destinations
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Nom de la ville ou région recherchée
+          schema:
+            type: string
+            example: "Lisbonne"
+        - name: ecoScore
+          in: query
+          description: Score écologique minimum (1-5)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            example: 3
+        - name: radius
+          in: query
+          description: Rayon de recherche en kilomètres
+          schema:
+            type: integer
+            default: 50
+            example: 100
+        - name: limit
+          in: query
+          description: Nombre maximum de résultats
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+            example: 20
+      responses:
+        '200':
+          description: Liste des destinations trouvées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Destination'
+                  total:
+                    type: integer
+                    example: 15
+                  page:
+                    type: integer
+                    example: 1
+        '400':
+          description: Paramètres de requête invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Calcul d'itinéraires écologiques
+  /routes/calculate:
+    post:
+      summary: Calculer des itinéraires écologiques
+      description: Calcule les options de transport les plus écologiques entre deux points
+      tags:
+        - Routes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - origin
+                - destination
+              properties:
+                origin:
+                  type: string
+                  description: Point de départ
+                  example: "Paris, France"
+                destination:
+                  type: string
+                  description: Point d'arrivée
+                  example: "Lisbonne, Portugal"
+                transportModes:
+                  type: array
+                  description: Modes de transport à considérer
+                  items:
+                    type: string
+                    enum: [train, bus, car, plane, bike, walk]
+                  example: ["train", "bus", "car"]
+                maxStops:
+                  type: integer
+                  description: Nombre maximum d'arrêts
+                  default: 3
+                  example: 2
+      responses:
+        '200':
+          description: Options d'itinéraires calculées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  routes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Route'
+        '400':
+          description: Données de requête invalides
+        '422':
+          description: Impossible de calculer l'itinéraire
+
+  # Hébergements écoresponsables
+  /accommodations:
+    get:
+      summary: Rechercher des hébergements écoresponsables
+      description: Filtre les hébergements par labels écologiques et critères durables
+      tags:
+        - Hébergements
+      parameters:
+        - name: location
+          in: query
+          required: true
+          description: Localisation recherchée
+          schema:
+            type: string
+            example: "Lisbonne"
+        - name: ecoLabels
+          in: query
+          description: Labels écologiques requis
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [green_key, eu_ecolabel, bio_hotel, sustainable_travel]
+          style: form
+          explode: false
+          example: ["green_key", "eu_ecolabel"]
+        - name: priceRange
+          in: query
+          description: Fourchette de prix par nuit (EUR)
+          schema:
+            type: string
+            pattern: '^\d+-\d+$'
+            example: "50-150"
+        - name: rating
+          in: query
+          description: Note minimum (1-5 étoiles)
+          schema:
+            type: number
+            minimum: 1
+            maximum: 5
+            example: 3.5
+      responses:
+        '200':
+          description: Liste des hébergements trouvés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accommodations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Accommodation'
+                  filters:
+                    $ref: '#/components/schemas/AccommodationFilters'
+
+  # Activités écologiques
+  /activities:
+    get:
+      summary: Rechercher des activités écologiques
+      description: Trouve des activités respectueuses de l'environnement dans une région
+      tags:
+        - Activités
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "Lisbonne"
+        - name: categories
+          in: query
+          description: Catégories d'activités
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [nature, culture, sport, gastronomie, artisanat]
+          style: form
+          explode: false
+        - name: impactLevel
+          in: query
+          description: Niveau d'impact environnemental maximum
+          schema:
+            type: string
+            enum: [very_low, low, medium, high]
+            default: medium
+      responses:
+        '200':
+          description: Liste des activités trouvées
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+
+  # Gestion des itinéraires utilisateur
+  /itineraries:
+    get:
+      summary: Obtenir les itinéraires de l'utilisateur
+      description: Liste les itinéraires sauvegardés par l'utilisateur connecté
+      tags:
+        - Itinéraires
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des itinéraires
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Itinerary'
+        '401':
+          description: Authentification requise
+
+    post:
+      summary: Créer un nouvel itinéraire
+      description: Sauvegarde un nouvel itinéraire pour l'utilisateur connecté
+      tags:
+        - Itinéraires
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItinerary'
+      responses:
+        '201':
+          description: Itinéraire créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Itinerary'
+        '400':
+          description: Données invalides
+        '401':
+          description: Authentification requise
+
+  /itineraries/{id}:
+    get:
+      summary: Obtenir un itinéraire spécifique
+      tags:
+        - Itinéraires
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Détails de l'itinéraire
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Itinerary'
+        '404':
+          description: Itinéraire non trouvé
+
+    put:
+      summary: Mettre à jour un itinéraire
+      tags:
+        - Itinéraires
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItinerary'
+      responses:
+        '200':
+          description: Itinéraire mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Itinerary'
+
+    delete:
+      summary: Supprimer un itinéraire
+      tags:
+        - Itinéraires
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Itinéraire supprimé avec succès
+        '404':
+          description: Itinéraire non trouvé
+
+  # Authentification
+  /auth/login:
+    post:
+      summary: Connexion utilisateur
+      description: Authentifie un utilisateur et retourne un token JWT
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "monMotDePasse123"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Identifiants invalides
+
+  /auth/register:
+    post:
+      summary: Inscription utilisateur
+      description: Crée un nouveau compte utilisateur
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                email:
+                  type: string
+                  format: email
+                firstName:
+                  type: string
+                  example: "Jean"
+                lastName:
+                  type: string
+                  example: "Dupont"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '201':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Compte créé avec succès"
+                  user:
+                    $ref: '#/components/schemas/User'
+        '409':
+          description: Email déjà utilisé
+
+  # Données météorologiques
+  /weather:
+    get:
+      summary: Obtenir les données météorologiques
+      description: Récupère les prévisions météo pour une destination
+      tags:
+        - Météo
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "Lisbonne, Portugal"
+        - name: days
+          in: query
+          description: Nombre de jours de prévision
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 14
+            default: 7
+      responses:
+        '200':
+          description: Données météorologiques
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherForecast'
+
+  # Administration
+  /admin/destinations:
+    post:
+      summary: Ajouter une nouvelle destination (Admin)
+      description: Permet aux administrateurs d'ajouter de nouvelles destinations
+      tags:
+        - Administration
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDestination'
+      responses:
+        '201':
+          description: Destination créée
+        '403':
+          description: Accès refusé - droits administrateur requis
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Modèles principaux
+    Destination:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Lisbonne"
+        country:
+          type: string
+          example: "Portugal"
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        ecoScore:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4.2
+          description: "Score écologique de 1 à 5"
+        description:
+          type: string
+          example: "Capitale du Portugal, connue pour ses tramways historiques et son engagement écologique"
+        sustainabilityFeatures:
+          type: array
+          items:
+            type: string
+          example: ["transport_public_efficace", "energie_renouvelable", "gestion_dechets"]
+        imageUrl:
+          type: string
+          format: uri
+          example: "https://images.voyagezverte.com/lisbonne.jpg"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Route:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "route_123"
+        origin:
+          type: string
+          example: "Paris, France"
+        destination:
+          type: string
+          example: "Lisbonne, Portugal"
+        transportMode:
+          type: string
+          enum: [train, bus, car, plane, bike, walk]
+          example: "train"
+        duration:
+          type: string
+          example: "18h 30m"
+        distance:
+          type: number
+          example: 1453.2
+          description: "Distance en kilomètres"
+        carbonFootprint:
+          type: object
+          properties:
+            co2Kg:
+              type: number
+              example: 45.8
+              description: "Émissions CO2 en kilogrammes"
+            rating:
+              type: string
+              enum: [excellent, good, average, poor]
+              example: "excellent"
+        price:
+          type: object
+          properties:
+            amount:
+              type: number
+              example: 89.50
+            currency:
+              type: string
+              example: "EUR"
+        ecoRank:
+          type: integer
+          example: 1
+          description: "Classement écologique (1 = le plus écologique)"
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteSegment'
+
+    RouteSegment:
+      type: object
+      properties:
+        transportMode:
+          type: string
+          example: "train"
+        from:
+          type: string
+          example: "Paris Gare de Lyon"
+        to:
+          type: string
+          example: "Madrid Atocha"
+        duration:
+          type: string
+          example: "6h 45m"
+        provider:
+          type: string
+          example: "SNCF"
+
+    Accommodation:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: "Eco Hotel Lisbonne"
+        type:
+          type: string
+          enum: [hotel, hostel, apartment, guesthouse, camping]
+          example: "hotel"
+        address:
+          type: string
+          example: "Rua Verde, 123, Lisbonne"
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4.3
+        ecoLabels:
+          type: array
+          items:
+            type: string
+            enum: [green_key, eu_ecolabel, bio_hotel, sustainable_travel]
+          example: ["green_key", "eu_ecolabel"]
+        sustainabilityFeatures:
+          type: array
+          items:
+            type: string
+          example: ["panneaux_solaires", "recyclage", "produits_locaux"]
+        pricePerNight:
+          type: object
+          properties:
+            amount:
+              type: number
+              example: 85.00
+            currency:
+              type: string
+              example: "EUR"
+        imageUrl:
+          type: string
+          format: uri
+        amenities:
+          type: array
+          items:
+            type: string
+          example: ["wifi", "petit_dejeuner_bio", "velos_gratuits"]
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 201
+        name:
+          type: string
+          example: "Visite guidée à vélo des quartiers historiques"
+        category:
+          type: string
+          enum: [nature, culture, sport, gastronomie, artisanat]
+          example: "culture"
+        description:
+          type: string
+          example: "Découverte écologique de Lisbonne en vélo électrique"
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        duration:
+          type: string
+          example: "3h"
+        impactLevel:
+          type: string
+          enum: [very_low, low, medium, high]
+          example: "very_low"
+        price:
+          type: object
+          properties:
+            amount:
+              type: number
+              example: 25.00
+            currency:
+              type: string
+              example: "EUR"
+        ecoFeatures:
+          type: array
+          items:
+            type: string
+          example: ["zero_emission", "local_guide", "small_group"]
+        imageUrl:
+          type: string
+          format: uri
+
+    Itinerary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 301
+        name:
+          type: string
+          example: "Mon voyage éco à Lisbonne"
+        description:
+          type: string
+          example: "Itinéraire de 5 jours axé sur le développement durable"
+        userId:
+          type: integer
+          example: 42
+        startDate:
+          type: string
+          format: date
+          example: "2024-06-15"
+        endDate:
+          type: string
+          format: date
+          example: "2024-06-20"
+        totalCarbonFootprint:
+          type: number
+          example: 156.7
+          description: "Empreinte carbone totale en kg CO2"
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Destination'
+        accommodations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Accommodation'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+        isPublic:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        email:
+          type: string
+          format: email
+          example: "jean.dupont@example.com"
+        firstName:
+          type: string
+          example: "Jean"
+        lastName:
+          type: string
+          example: "Dupont"
+        role:
+          type: string
+          enum: [user, admin]
+          example: "user"
+        preferences:
+          type: object
+          properties:
+            preferredTransport:
+              type: array
+              items:
+                type: string
+              example: ["train", "bus"]
+            maxCarbonFootprint:
+              type: number
+              example: 100.0
+            budgetRange:
+              type: string
+              example: "medium"
+        createdAt:
+          type: string
+          format: date-time
+
+    WeatherForecast:
+      type: object
+      properties:
+        location:
+          type: string
+          example: "Lisbonne, Portugal"
+        current:
+          $ref: '#/components/schemas/WeatherCondition'
+        forecast:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyWeather'
+
+    WeatherCondition:
+      type: object
+      properties:
+        temperature:
+          type: number
+          example: 22.5
+        humidity:
+          type: number
+          example: 65
+        condition:
+          type: string
+          example: "ensoleillé"
+        windSpeed:
+          type: number
+          example: 12.3
+        visibility:
+          type: number
+          example: 10.0
+
+    DailyWeather:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2024-06-15"
+        minTemp:
+          type: number
+          example: 18.0
+        maxTemp:
+          type: number
+          example: 26.0
+        condition:
+          type: string
+          example: "partiellement nuageux"
+        precipitationChance:
+          type: number
+          example: 20
+
+    # Modèles pour les requêtes
+    CreateItinerary:
+      type: object
+      required:
+        - name
+        - startDate
+        - endDate
+      properties:
+        name:
+          type: string
+          example: "Voyage éco Portugal"
+        description:
+          type: string
+          example: "Itinéraire respectueux de l'environnement"
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        destinationIds:
+          type: array
+          items:
+            type: integer
+        accommodationIds:
+          type: array
+          items:
+            type: integer
+        activityIds:
+          type: array
+          items:
+            type: integer
+        isPublic:
+          type: boolean
+          default: false
+
+    UpdateItinerary:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        isPublic:
+          type: boolean
+
+    CreateDestination:
+      type: object
+      required:
+        - name
+        - country
+        - coordinates
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        description:
+          type: string
+        ecoScore:
+          type: number
+          minimum: 1
+          maximum: 5
+        sustainabilityFeatures:
+          type: array
+          items:
+            type: string
+
+    # Modèles utilitaires
+    Coordinates:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+          example: 38.7223
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+          example: -9.1393
+
+    AccommodationFilters:
+      type: object
+      properties:
+        availableEcoLabels:
+          type: array
+          items:
+            type: string
+        priceRanges:
+          type: array
+          items:
+            type: string
+        amenities:
+          type: array
+          items:
+            type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Paramètre manquant"
+        message:
+          type: string
+          example: "Le paramètre 'query' est requis"
+        code:
+          type: integer
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: Destinations
+    description: Recherche et gestion des destinations écologiques
+  - name: Routes
+    description: Calcul d'itinéraires et estimation carbone
+  - name: Hébergements
+    description: Recherche d'hébergements écoresponsables
+  - name: Activités
+    description: Activités respectueuses de l'environnement
+  - name: Itinéraires
+    description: Gestion des itinéraires utilisateur
+  - name: Authentification
+    description: Connexion et inscription des utilisateurs
+  - name: Météo
+    description: Données météorologiques des destinations
+  - name: Administration
+    description: Fonctionnalités d'administration
