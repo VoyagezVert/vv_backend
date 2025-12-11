@@ -3,3 +3,4 @@ build
 .devcontainer/.env.local
 .gradle
 .env.prod
+.env.docker

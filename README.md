@@ -39,6 +39,12 @@ echo "GIT_EMAIL=" >> .devcontainer/.env.local
 - Ne pas oublier de faire des tests unitaires !
 - Le backend s'ouvre automatiquement en hotreload sur le port 8080 (sur votre machine hôte, sinon pensez à configurer le docker network)
 
+## 🔐 Authentification JWT
+
+- Variables requises : `JWT_SECRET` (obligatoire en prod), `JWT_EXPIRATION_MS` (par défaut 3600000 ms).
+- Endpoints : `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+- Toutes les routes hors `/api/auth/**` nécessitent un header `Authorization: Bearer <token>`.
+
 ### 4. Connexion avec le frontend
 
 A venir...

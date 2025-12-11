@@ -59,6 +59,10 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0-RC1")
     implementation("org.springframework.boot:spring-boot-starter-web:4.0.0-RC1")
+    implementation("org.springframework.boot:spring-boot-starter-validation:4.0.0-RC1")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test
 	//testImplementation("org.springframework.boot:spring-boot-starter-test:4.0.0-RC1")
     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-contract-verifier/5.0.0-M4
