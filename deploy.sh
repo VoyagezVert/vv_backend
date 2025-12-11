@@ -12,11 +12,8 @@ generate_password() {
 echo "🔧 Génération des secrets pour .env.prod ..."
 
 # -----------------------
-#  Variables pour DB et secrets
+#  1️⃣ Secrets JWT
 # -----------------------
-DB_URL="jdbc:postgresql://vv_db:5432/voyagezvert"
-DB_USER="postgres"
-DB_PASSWORD=$(generate_password)
 
 JWT_SECRET=$(generate_password)
 API_KEY_INTERNAL=$(generate_password)
