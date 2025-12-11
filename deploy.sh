@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ================================
-#  Génération du fichier .env.prod
+#  Génération des fichiers .env.prod
 # ================================
 
 # Fonction pour générer un mot de passe fort
@@ -11,31 +11,29 @@ generate_password() {
 
 echo "🔧 Génération des secrets pour .env.prod ..."
 
-DB_URL="jdbc:postgresql://vv_db:5432/voyagezvert"
-DB_USER="postgres"
-DB_PASSWORD=$(generate_password)
+# -----------------------
+#  1️⃣ Secrets JWT
+# -----------------------
 
 JWT_SECRET=$(generate_password)
 API_KEY_INTERNAL=$(generate_password)
 
-# Écrire dans .env.prod
-cat > .env.prod <<EOF
-# =====================================
-#   Fichier d'environnement de production
-# =====================================
-
-DB_URL="${DB_URL}"
-DB_USER="${DB_USER}"
-DB_PASSWORD="${DB_PASSWORD}"
-
-JWT_SECRET="${JWT_SECRET}"
-API_KEY_INTERNAL="${API_KEY_INTERNAL}"
+# -----------------------
+#  2️⃣ Fichier .env.prod à la racine pour la base de données seulement
+# -----------------------
+cat > ../.env.prod <<EOF
+# =============================
+#   Fichier d'environnement DB
+# =============================
+POSTGRES_DB_URL=jdbc:postgresql://database:5432/voyagezvert
+POSTGRES_USER="${DB_USER}"
+POSTGRES_PASSWORD="${DB_PASSWORD}"
 EOF
 
-echo "✅ Fichier .env.prod généré."
-echo "📁 Contenu sécurisé et prêt pour Docker / Spring Boot."
+echo "✅ Fichier .env.prod (racine) généré avec identifiants DB."
+
 echo ""
-echo "⚠️ Le fichier contient des secrets — garde-le privé."
+echo "⚠️ Les fichiers contiennent des secrets — garde-les privés."
 echo ""
-echo "➡️  Pour charger cet environnement :"
+echo "➡️  Pour charger l'environnement :"
 echo "source .env.prod"

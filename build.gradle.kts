@@ -55,6 +55,7 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql:42.7.8")
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
 	annotationProcessor("org.projectlombok:lombok")
+    implementation("io.github.cdimascio:dotenv-java:3.0.0")
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0-RC1")
     implementation("org.springframework.boot:spring-boot-starter-web:4.0.0-RC1")
