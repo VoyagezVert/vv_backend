@@ -22,32 +22,13 @@ JWT_SECRET=$(generate_password)
 API_KEY_INTERNAL=$(generate_password)
 
 # -----------------------
-#  1️⃣ Fichier .env.prod pour Docker / Spring Boot
-# -----------------------
-cat > .env.prod <<EOF
-# =====================================
-#   Fichier d'environnement de production
-# =====================================
-
-DB_URL="${DB_URL}"
-DB_USER="${DB_USER}"
-DB_PASSWORD="${DB_PASSWORD}"
-
-JWT_SECRET="${JWT_SECRET}"
-API_KEY_INTERNAL="${API_KEY_INTERNAL}"
-EOF
-
-echo "✅ Fichier .env.prod (Docker/Spring) généré."
-
-# -----------------------
 #  2️⃣ Fichier .env.prod à la racine pour la base de données seulement
 # -----------------------
 cat > ../.env.prod <<EOF
 # =============================
 #   Fichier d'environnement DB
 # =============================
-
-POSTGRES_DB="voyagezvert"
+POSTGRES_DB_URL=jdbc:postgresql://database:5432/voyagezvert
 POSTGRES_USER="${DB_USER}"
 POSTGRES_PASSWORD="${DB_PASSWORD}"
 EOF

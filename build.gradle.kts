@@ -85,10 +85,6 @@ dependencies {
 	}
 }*/
 
-tasks.withType<JavaExec> {
-    environment("DOTENV_FILE", ".env.prod")
-}
-
 /*contracts {
 }*/
 
